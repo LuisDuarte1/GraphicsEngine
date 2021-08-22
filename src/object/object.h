@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include "../renderer/openglrenderer.h"
+#include "../renderer/shadermanager/openglshadermanager.h"
 
 using namespace glm;
 

@@ -19,6 +19,7 @@ class WorldObject;
 #include "../object/object.h"
 #include "../camera/camera.h"
 #include "../thread_communication/threadcommunication.h"
+#include "shadermanager/openglshadermanager.h"
 
 using namespace glm;
 
@@ -46,7 +47,6 @@ class OpenGLRenderer{
         
 };
 
-GLuint LoadShaders(std::string vertexshader,std::string fragmentshader);
 
 
 #endif

@@ -13,6 +13,8 @@
 #include <atomic>
 #include <mutex>
 #include <queue>
+#include <unordered_map>
+
 
 
 class WorldObject;
@@ -43,6 +45,9 @@ class OpenGLRenderer{
         std::vector<WorldObject*> object_list;
         glm::mat4 projectionMatrix;
         std::atomic<Camera*> current_camera;
+        //an unordered_map with the ProgramID as key should allow us to save some opengl calls even if it is a few hundreds of nanoseconds slower
+        std::unordered_map<GLuint, std::vector<WorldObject*>> objectshader_map;
+
 
         
 };

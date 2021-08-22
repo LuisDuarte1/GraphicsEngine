@@ -53,7 +53,8 @@ void OpenGLRenderer::render(){
     glDepthFunc(GL_LESS);
     last_frame = 0; //initialize frame time
     current_frame = 0;
-    //TODO:Organize the same object to render at the same loop if they have the same shader and/or mesh
+    //TODO:Organize the same object to render if they have the same mesh
+
     do{
     last_frame = current_frame;
     current_frame = glfwGetTime();
@@ -64,43 +65,55 @@ void OpenGLRenderer::render(){
         continue;
     }
     object_mutex.lock();
-    for(int i = 0; i < object_list.size(); i++){ //Get object from list
+    for(int i = 0; i < object_list.size(); i++){ //Get object from list, this is only a shared list not the list used in rendering
         if(object_list[i]->initialized == false){
             object_list[i]->InitAndGiveDataToOpenGL();
+            auto search = objectshader_map.find(object_list[i]->programID);
+            if(search != objectshader_map.end()){
+                search->second.emplace_back(object_list[i]);
+            }
+            else{ //if the shader does not exist in the system, create a new key and vector
+                objectshader_map.insert(std::make_pair(object_list[i]->programID, std::vector<WorldObject*>{object_list[i]}));
+            }
         }
-        //set object's VAO
-        glUseProgram(object_list[i]->programID);
-        GLuint MatrixID = glGetUniformLocation(object_list[i]->programID, "MVP");
-        glm::mat4 mvp = projectionMatrix * current_camera.load()->GetCameraMatrix() * object_list[i]->GetModelMatrix();
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-        // 1st attribute buffer : vertices
-                        // 2nd attribute buffer : colors
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, object_list[i]->colorbuffer);
-        glVertexAttribPointer(
-            1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-            3,                                // size
-            GL_FLOAT,                         // type
-            GL_FALSE,                         // normalized?
-            0,                                // stride
-            (void*)0                          // array buffer offset
-        );
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, object_list[i]->vertexbuffer);
-        glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-        );
-        // Draw the triangle !
-
-        glDrawArrays(GL_TRIANGLES, 0, object_list[i]->vertex_data_size); // Starting from vertex 0; 3 vertices total -> 1 triangle
-
     }
     object_mutex.unlock();
+    //Now the object is sorted by their programID incresing 50fps in RenderDoc and reduzing a costly opengl call for each object
+    for(const auto& keypair : objectshader_map){
+        //set object's VAO
+        glUseProgram(keypair.first);
+        for(int i = 0; i < keypair.second.size(); i++){
+            GLuint MatrixID = glGetUniformLocation(keypair.second[i]->programID, "MVP");
+            glm::mat4 mvp = projectionMatrix * current_camera.load()->GetCameraMatrix() * keypair.second[i]->GetModelMatrix();
+            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+            // 1st attribute buffer : vertices
+                            // 2nd attribute buffer : colors
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, keypair.second[i]->colorbuffer);
+            glVertexAttribPointer(
+                1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+                3,                                // size
+                GL_FLOAT,                         // type
+                GL_FALSE,                         // normalized?
+                0,                                // stride
+                (void*)0                          // array buffer offset
+            );
+            glEnableVertexAttribArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, keypair.second[i]->vertexbuffer);
+            glVertexAttribPointer(
+            0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+            3,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+            );
+            // Draw the triangle !
+
+            glDrawArrays(GL_TRIANGLES, 0, keypair.second[i]->vertex_data_size); // Starting from vertex 0; 3 vertices total -> 1 triangle
+        }
+    }
+    
     // Swap buffers
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -20,6 +20,7 @@ class WorldObject{
         WorldObject(std::string vertexshader, std::string fragmentshader);
         GLuint programID;
         GLfloat *vertex_data;
+        GLfloat *uv_data;
         int vertex_data_size;
         bool LoadVertices(std::vector<GLfloat> vertices);
         //For now each object has it's own VAO, its inefficient because it doesnt allow for batched rendering, might change it later

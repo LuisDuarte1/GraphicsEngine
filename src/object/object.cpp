@@ -14,16 +14,23 @@ WorldObject::WorldObject(std::string vertexshader, std::string fragmentshader){
 }
 
 bool WorldObject::LoadVertices(std::vector<GLfloat> vertices){ //Vertices comes in a vector to allow for easy editing if necessary
+    //the vertices data include the UV coordinate data that must be in a different array alltogether
     //I convert the vector into a array because it's faster to acess the data in this way
     int size = vertices.size();
-    if(!((size % 3)== 0)){
-        printf("%d is not divisible by 3. Each vertex must take 3 arguments\n", size);
+    if(!((size % 5)== 0)){
+        printf("%d is not divisible by 5. Each vertex must take 5 arguments\n", size);
         return false;
     }
-    vertex_data_size = size;
-    vertex_data = new GLfloat[size];
-    for(int i = 0; i < size; i++){
-        vertex_data[i] = vertices.at(i);
+    vertex_data_size = (size/5)*3; //get number of entries by dividing by 5 and then multiply by tree because vertex has x,y and z
+    vertex_data = new GLfloat[vertex_data_size];
+    uv_data = new GLfloat[(size/5)*2];
+    
+    for(int i = 0; i < (size/5); i++){
+        vertex_data[i*3] = vertices.at(i*5);
+        vertex_data[(i*3)+1] = vertices.at((i*5)+1);
+        vertex_data[(i*3)+2] = vertices.at((i*5)+2);
+        uv_data[(i*2)] = vertices.at((i*5)+3);
+        uv_data[(i*2)+1] = vertices.at((i*5)+4);
     }
     return true;
 }

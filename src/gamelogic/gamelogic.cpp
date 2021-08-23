@@ -19,7 +19,7 @@ void GameLogic::Init(){
     #include "../renderer/shaders/SimpleFragmentShader.vertexshader"
     ;
     std::vector<GLfloat> t = ReadObjFile("untitled.obj");
-    for(int i = 0; i < 1000; i++){
+    for(int i = 0; i < 100; i++){
 
 
         WorldObject *triangle = new WorldObject(vertex_shader, fragment_shader);
@@ -28,6 +28,7 @@ void GameLogic::Init(){
         std::vector<GLfloat> color;
         for(int e = 0; e<t.size(); e++){
             color.push_back((float)rand()/RAND_MAX);
+            //color.push_back(0.5);
         }
         triangle->LoadColor(color);
         triangle->LoadVertices(t);

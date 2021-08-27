@@ -51,6 +51,10 @@ void WorldObject::InitAndGiveDataToOpenGL(){
 
     //generate 1 color buffer
     glGenBuffers(1, &colorbuffer);
+
+    //generate 1 uv vertex buffer
+    glGenBuffers(1, &uvbuffer);
+
     //then we create the buffers
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     // Give our vertices to OpenGL.
@@ -61,6 +65,9 @@ void WorldObject::InitAndGiveDataToOpenGL(){
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
     glBufferData(GL_ARRAY_BUFFER, vertex_data_size * sizeof(GLfloat), color_data, GL_STATIC_DRAW);
 
+    //give uv coordinates to opengl
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glBufferData(GL_ARRAY_BUFFER, (((vertex_data_size/3))*2) * sizeof(GLfloat), uv_data, GL_STATIC_DRAW);
 
     //Load texture and
     glGenTextures(1, &texture);
@@ -69,7 +76,7 @@ void WorldObject::InitAndGiveDataToOpenGL(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     initialized = true;

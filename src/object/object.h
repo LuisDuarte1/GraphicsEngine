@@ -32,6 +32,8 @@ class WorldObject{
         //For now each object has it's own VAO, its inefficient because it doesnt allow for batched rendering, might change it later
         GLuint VertexArrayID;
         GLuint vertexbuffer;
+
+        GLuint uvbuffer;
         
         bool LoadTexture(std::vector<unsigned char> texturedata, unsigned width_, unsigned height_);
 

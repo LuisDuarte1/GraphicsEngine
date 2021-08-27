@@ -3,7 +3,7 @@
 #include "../images/stb_image.h"
 
 std::tuple<std::vector<unsigned char>, unsigned, unsigned> ReadPngFile(std::string filename){
-    
+    stbi_set_flip_vertically_on_load(true);  //because opengl loads textures inverted for some reason lmao 
     std::vector<unsigned char> filtered_image;
     int width, height, nrChannels;
     unsigned char *image = stbi_load("Cube.png", &width, &height, &nrChannels, 0); 

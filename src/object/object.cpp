@@ -25,6 +25,7 @@ bool WorldObject::LoadVertices(std::vector<GLfloat> vertices){ //Vertices comes 
     vertex_data = new GLfloat[vertex_data_size];
     uv_data = new GLfloat[(size/5)*2];
     
+    //TODO (luis): find if there's a equal vertex data and uv data to avoid unnecessary memory allocation
     for(int i = 0; i < (size/5); i++){
         vertex_data[i*3] = vertices.at(i*5);
         vertex_data[(i*3)+1] = vertices.at((i*5)+1);
@@ -59,6 +60,18 @@ void WorldObject::InitAndGiveDataToOpenGL(){
     //give our color values to opengl
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
     glBufferData(GL_ARRAY_BUFFER, vertex_data_size * sizeof(GLfloat), color_data, GL_STATIC_DRAW);
+
+
+    //Load texture and
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     initialized = true;
 }
 
@@ -86,4 +99,18 @@ bool WorldObject::LoadColor(std::vector<GLfloat> colors){
         color_data[i] = colors.at(i);
     }
     return true;
+}
+
+bool WorldObject::LoadTexture(std::vector<unsigned char> texturedata, unsigned width_, unsigned height_){
+    int size = texturedata.size();
+    width = width_;
+    height = height_;
+    //TODO (luis) see if a texture is already loaded to avoid unecessary memory allocation
+    
+    texture_data = new unsigned char[size];
+    for(int i = 0; i < size; i++){
+        texture_data[i] = texturedata.at(i);
+    }
+    return true;
+    
 }

@@ -19,17 +19,25 @@ class WorldObject{
     public:
         WorldObject(std::string vertexshader, std::string fragmentshader);
         GLuint programID;
+        GLuint texture;
+
         GLfloat *vertex_data;
         GLfloat *uv_data;
+
+        unsigned char *texture_data;
+        unsigned width, height;
+
         int vertex_data_size;
         bool LoadVertices(std::vector<GLfloat> vertices);
         //For now each object has it's own VAO, its inefficient because it doesnt allow for batched rendering, might change it later
         GLuint VertexArrayID;
         GLuint vertexbuffer;
         
+        bool LoadTexture(std::vector<unsigned char> texturedata, unsigned width_, unsigned height_);
+
         void InitAndGiveDataToOpenGL();
         inline void ChangeWorldPosition(glm::vec3 newpos){world_position.store(newpos);};
-
+        
 
         glm::mat4 GetModelMatrix();
 

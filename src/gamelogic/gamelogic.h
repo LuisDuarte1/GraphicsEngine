@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include "../renderer/openglrenderer.h"
 #include "../utils/objreader.h"
+#include "../utils/pngloader.h"
 #include "../input/input.h"
 
 #define UPDATESPERSECOND 120

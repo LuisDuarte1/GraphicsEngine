@@ -108,8 +108,18 @@ void OpenGLRenderer::render(){
             0,                  // stride
             (void*)0            // array buffer offset
             );
-            // Draw the triangle !
-
+            // 3d attribute buffer : uv data
+            glEnableVertexAttribArray(2);
+            glBindBuffer(GL_ARRAY_BUFFER, keypair.second[i]->uvbuffer);  
+            glVertexAttribPointer(
+            2,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+            2,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+            );
+            glBindTexture(GL_TEXTURE_2D, keypair.second[i]->texture);
             glDrawArrays(GL_TRIANGLES, 0, keypair.second[i]->vertex_data_size); // Starting from vertex 0; 3 vertices total -> 1 triangle
         }
     }

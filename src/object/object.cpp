@@ -67,6 +67,7 @@ void WorldObject::InitAndGiveDataToOpenGL(){
 
     //give uv coordinates to opengl
     glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    //this is wrong
     glBufferData(GL_ARRAY_BUFFER, (((vertex_data_size/3))*2) * sizeof(GLfloat), uv_data, GL_STATIC_DRAW);
 
     //Load texture and

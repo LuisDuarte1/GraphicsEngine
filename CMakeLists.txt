@@ -102,9 +102,9 @@ endif(GRAPHICSENGINE_SUPPORT_GLM)
 ### OpenSSL
 ###
 if(GRAPHICSENGINE_SUPPORT_OPENSSL)
-    add_subdirectory(libs/openssl-cmake/)
-    list(APPEND PROJ_LINK_LIBS crypto)
-    list(APPEND PROJ_LINK_LIBS ssl)
+    find_package(OpenSSL)
+    list(APPEND PROJ_LINK_LIBS OpenSSL::SSL)
+    list(APPEND PROJ_LINK_LIBS OpenSSL::Crypto)
 endif(GRAPHICSENGINE_SUPPORT_OPENSSL)
 
 

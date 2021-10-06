@@ -11,6 +11,7 @@
 #include <glm/gtx/transform.hpp>
 #include "../renderer/openglrenderer.h"
 #include "../renderer/shadermanager/openglshadermanager.h"
+#include "../renderer/texturemanager/opengltexturemanager.h"
 
 using namespace glm;
 
@@ -25,6 +26,7 @@ class WorldObject{
         GLfloat *uv_data;
 
         unsigned char *texture_data;
+        int texture_data_size;
         unsigned width, height;
 
         int vertex_data_size;

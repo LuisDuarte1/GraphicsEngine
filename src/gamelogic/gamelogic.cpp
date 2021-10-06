@@ -20,7 +20,7 @@ void GameLogic::Init(){
     ;
     std::vector<GLfloat> t = ReadObjFile("untitled.obj");
     std::tuple<std::vector<unsigned char>, unsigned, unsigned> texture = ReadPngFile("Cube.png");
-    for(int i = 0; i < 100; i++){
+    for(int i = 0; i < 1000; i++){
 
 
         WorldObject *triangle = new WorldObject(vertex_shader, fragment_shader);
@@ -33,7 +33,7 @@ void GameLogic::Init(){
         }
         triangle->LoadColor(color);
         triangle->LoadVertices(t);
-        triangle->LoadTexture(std::get<0>(texture), std::get<1>(texture), std::get<2>(texture));
+        triangle->LoadTexture(std::get<0>(texture), std::get<1>(texture), std::get<2>(texture)); 
         triangle->ChangeWorldPosition(glm::vec3(rand() % 30,rand() % 2 ,rand() % 30));
         current_renderer->AddObjectToRender(triangle);
     }

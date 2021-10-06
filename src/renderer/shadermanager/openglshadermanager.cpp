@@ -10,7 +10,6 @@ GLuint LoadShaders(std::string vertexshader,std::string fragmentshader){
     auto search = shader_map.find(shader_pair);
     if(search != shader_map.end()){
         //if we find it we get the programID and return it
-        printf("Found a ProgramID for this shader...");
         return search->second;
 
     }

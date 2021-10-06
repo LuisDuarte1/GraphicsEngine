@@ -1,0 +1,3 @@
+[submodule "libs/openssl-cmake"]
+	path = libs/openssl-cmake
+	url = https://github.com/viaduck/openssl-cmake

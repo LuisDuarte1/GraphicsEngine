@@ -7,17 +7,18 @@ set (CMAKE_CXX_STANDARD 17)
 ### Options
 ###
 # Unsed previous parameters from cache for the sake of dynamism
-unset(KITGL_SUPPORT_GLFW CACHE)
-unset(KITGL_SUPPORT_GLAD CACHE)
-unset(KITGL_SUPPORT_GLEW CACHE)
-unset(KITGL_SUPPORT_GLM CACHE)
+unset(GRAPHICSENGINE_SUPPORT_GLFW CACHE)
+unset(GRAPHICSENGINE_SUPPORT_GLAD CACHE)
+unset(GRAPHICSENGINE_SUPPORT_GLEW CACHE)
+unset(GRAPHICSENGINE_SUPPORT_GLM CACHE)
+unset(GRAPHICSENGINE_SUPPORT_OPENSSL CACHE)
 
 # Enable desired libs
-option(KITGL_SUPPORT_GLFW "Set ON/OFF to enable/disable GLFW support." ON)
-option(KITGL_SUPPORT_GLAD "Set ON/OFF to enable/disable GLAD support." ON)
-option(KITGL_SUPPORT_GLEW "Set ON/OFF to enable/disable GLEW support." ON)
-option(KITGL_SUPPORT_GLM "Set ON/OFF to enable/disable GLM support." ON)
-
+option(GRAPHICSENGINE_SUPPORT_GLFW "Set ON/OFF to enable/disable GLFW support." ON)
+option(GRAPHICSENGINE_SUPPORT_GLAD "Set ON/OFF to enable/disable GLAD support." ON)
+option(GRAPHICSENGINE_SUPPORT_GLEW "Set ON/OFF to enable/disable GLEW support." ON)
+option(GRAPHICSENGINE_SUPPORT_GLM "Set ON/OFF to enable/disable GLM support." ON)
+option(GRAPHICSENGINE_SUPPORT_OPENSSL "Set ON/OFF to enable/disable OpenSLL support." ON)
 
 
 ###
@@ -48,7 +49,7 @@ file(GLOB_RECURSE PROJ_SRC src/*.h src/*.cpp)
 ###
 ### GLFW
 ###
-if(KITGL_SUPPORT_GLFW)
+if(GRAPHICSENGINE_SUPPORT_GLFW)
     # Disable internal builds
     unset(GLFW_BUILD_EXAMPLES CACHE)
     unset(GLFW_BUILD_TESTS CACHE)
@@ -61,24 +62,24 @@ if(KITGL_SUPPORT_GLFW)
     include_directories(libs/glfw/include)
     include_directories(libs/glfw/deps)
     list(APPEND PROJ_LINK_LIBS glfw)
-endif(KITGL_SUPPORT_GLFW)
+endif(GRAPHICSENGINE_SUPPORT_GLFW)
 
 
 ###
 ### GLAD
 ###
-if(KITGL_SUPPORT_GLAD)
+if(GRAPHICSENGINE_SUPPORT_GLAD)
     include_directories(libs/glfw/deps)
     list(APPEND PROJ_SRC
         libs/glfw/deps/glad_gl.c
         )
-endif(KITGL_SUPPORT_GLAD)
+endif(GRAPHICSENGINE_SUPPORT_GLAD)
 
 
 ###
 ### GLEW
 ###
-if(KITGL_SUPPORT_GLEW)
+if(GRAPHICSENGINE_SUPPORT_GLEW)
     # Disable internal builds
     unset(BUILD_UTILS CACHE)
     option(BUILD_UTILS "utilities" OFF)
@@ -86,17 +87,25 @@ if(KITGL_SUPPORT_GLEW)
     add_subdirectory(libs/glew/build/cmake)
     include_directories(libs/glew/include)
     list(APPEND PROJ_LINK_LIBS glew)
-endif(KITGL_SUPPORT_GLEW)
+endif(GRAPHICSENGINE_SUPPORT_GLEW)
 
 ###
 ### GLM
 ###
-if(KITGL_SUPPORT_GLM)
+if(GRAPHICSENGINE_SUPPORT_GLM)
     set(GLM_DIR "libs/glm/cmake/glm")
     find_package(GLM REQUIRED)
     list(APPEND PROJ_LINK_LIBS glm::glm)
-endif(KITGL_SUPPORT_GLM)
+endif(GRAPHICSENGINE_SUPPORT_GLM)
 
+###
+### OpenSSL
+###
+if(GRAPHICSENGINE_SUPPORT_OPENSSL)
+    add_subdirectory(libs/openssl-cmake/)
+    list(APPEND PROJ_LINK_LIBS crypto)
+    list(APPEND PROJ_LINK_LIBS ssl)
+endif(GRAPHICSENGINE_SUPPORT_OPENSSL)
 
 
 ###

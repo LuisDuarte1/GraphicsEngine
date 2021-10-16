@@ -120,7 +120,7 @@ void OpenGLRenderer::render(){
             (void*)0            // array buffer offset
             );
             glBindTexture(GL_TEXTURE_2D, keypair.second[i]->texture);
-            glDrawArrays(GL_TRIANGLES, 0, keypair.second[i]->vertex_data_size); // Starting from vertex 0; 3 vertices total -> 1 triangle
+            glDrawArrays(GL_TRIANGLES, 0, ((keypair.second[i]->vertex_data_size)/3)); // Starting from vertex 0; 3 vertices total -> 1 triangle
         }
     }
     

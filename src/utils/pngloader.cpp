@@ -9,7 +9,7 @@ std::tuple<std::vector<unsigned char>, unsigned, unsigned> ReadPngFile(std::stri
     unsigned char *image = stbi_load("Cube.png", &width, &height, &nrChannels, 0); 
     //if there's an error, display it
     if(!image){
-        raise(1);
+        exit(1);
     }
     if(nrChannels == 4){
     //remove alpha from image

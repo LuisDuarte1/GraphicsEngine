@@ -27,10 +27,10 @@ option(GRAPHICSENGINE_SUPPORT_OPENSSL "Set ON/OFF to enable/disable OpenSLL supp
 # Project parameters
 set(PROJ_LINK_LIBS)
 set(PROJ_SRC)
+find_library( atomic-lib atomic )
+list(APPEND PROJ_LINK_LIBS atomic)
 if(WIN32)
     set(CMAKE_RC_COMPILER "windres") #Windows only, for some reason mys2 mingw 64 gets the rc compiler wrong
-    find_library( atomic-lib atomic )
-    list(APPEND PROJ_LINK_LIBS atomic)
     find_package(OpenGL REQUIRED)
 
     list(APPEND PROJ_LINK_LIBS opengl32)
@@ -94,8 +94,13 @@ endif(GRAPHICSENGINE_SUPPORT_GLEW)
 ###
 if(GRAPHICSENGINE_SUPPORT_GLM)
     set(GLM_DIR "libs/glm/cmake/glm")
-    find_package(glm REQUIRED)
-    list(APPEND PROJ_LINK_LIBS glm)
+    if(WIN32)
+        find_package(GLM REQUIRED)
+        list(APPEND PROJ_LINK_LIBS glm::glm)
+    else()
+        find_package(glm REQUIRED)
+        list(APPEND PROJ_LINK_LIBS glm)
+    endif(WIN32)
 endif(GRAPHICSENGINE_SUPPORT_GLM)
 
 ###
@@ -107,7 +112,6 @@ if(GRAPHICSENGINE_SUPPORT_OPENSSL)
     list(APPEND PROJ_LINK_LIBS OpenSSL::Crypto)
 endif(GRAPHICSENGINE_SUPPORT_OPENSSL)
 
-list(APPEND PROJ_LINK_LIBS atomic)
 
 ###
 ### Generating the project files

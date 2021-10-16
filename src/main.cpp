@@ -24,7 +24,7 @@ int main()
 
     
 
-    std::thread game_thread(GameLogic::Init, gameloop);
+    std::thread game_thread(&GameLogic::Init, gameloop);
     renderergl->render();
     //game_thread.join();
 

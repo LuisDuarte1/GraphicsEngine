@@ -94,8 +94,8 @@ endif(GRAPHICSENGINE_SUPPORT_GLEW)
 ###
 if(GRAPHICSENGINE_SUPPORT_GLM)
     set(GLM_DIR "libs/glm/cmake/glm")
-    find_package(GLM REQUIRED)
-    list(APPEND PROJ_LINK_LIBS glm::glm)
+    find_package(glm REQUIRED)
+    list(APPEND PROJ_LINK_LIBS glm)
 endif(GRAPHICSENGINE_SUPPORT_GLM)
 
 ###
@@ -107,6 +107,7 @@ if(GRAPHICSENGINE_SUPPORT_OPENSSL)
     list(APPEND PROJ_LINK_LIBS OpenSSL::Crypto)
 endif(GRAPHICSENGINE_SUPPORT_OPENSSL)
 
+list(APPEND PROJ_LINK_LIBS atomic)
 
 ###
 ### Generating the project files

@@ -42,32 +42,13 @@ void WorldObject::InitAndGiveDataToOpenGL(){
 
     //first we compile the provided shader
     programID = LoadShaders(vertexshader, fragmentshader);
-        //Create VAO
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-    // Generate 1 buffer, put the resulting identifier in vertexbuffer
-    glGenBuffers(1, &vertexbuffer);
 
-    //generate 1 color buffer
-    glGenBuffers(1, &colorbuffer);
-
-    //generate 1 uv vertex buffer
-    glGenBuffers(1, &uvbuffer);
-
-    //then we create the buffers
+    std::tuple<GLuint, GLuint, GLuint, GLuint> vao_tuple = AddToVAOHashlist(vertex_data, color_data, uv_data, vertex_data_size);
     
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, vertex_data_size * sizeof(GLfloat), vertex_data, GL_STATIC_DRAW);
-    
-
-    //give our color values to opengl
-    glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertex_data_size * sizeof(GLfloat), color_data, GL_STATIC_DRAW);
-
-    //give uv coordinates to opengl
-    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, (((vertex_data_size/3))*2) * sizeof(GLfloat), uv_data, GL_STATIC_DRAW);
+    VertexArrayID = std::get<0>(vao_tuple);
+    vertexbuffer = std::get<1>(vao_tuple);
+    colorbuffer = std::get<2>(vao_tuple);
+    uvbuffer = std::get<3>(vao_tuple);
 
     //Load texture 
     texture = AddToHashlist(texture_data, texture_data_size, width, height);

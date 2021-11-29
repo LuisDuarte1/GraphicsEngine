@@ -13,6 +13,7 @@
 #include "../renderer/openglrenderer.h"
 #include "../renderer/shadermanager/openglshadermanager.h"
 #include "../renderer/texturemanager/opengltexturemanager.h"
+#include "../renderer/vaomanager/openglvaomanager.h"
 
 using namespace glm;
 

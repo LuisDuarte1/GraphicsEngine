@@ -28,7 +28,7 @@ void GameLogic::Init(){
         //now we generate the color 
         std::vector<GLfloat> color;
         for(int e = 0; e<t.size(); e++){
-            color.push_back((float)rand()/RAND_MAX);
+            color.push_back(0);
             //color.push_back(0.5);
         }
         triangle->LoadColor(color);

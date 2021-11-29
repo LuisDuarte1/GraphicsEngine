@@ -59,8 +59,6 @@ if(GRAPHICSENGINE_SUPPORT_GLFW)
     option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 
     add_subdirectory(libs/glfw)
-    include_directories(libs/glfw/include)
-    include_directories(libs/glfw/deps)
     list(APPEND PROJ_LINK_LIBS glfw)
 endif(GRAPHICSENGINE_SUPPORT_GLFW)
 
@@ -70,9 +68,6 @@ endif(GRAPHICSENGINE_SUPPORT_GLFW)
 ###
 if(GRAPHICSENGINE_SUPPORT_GLAD)
     include_directories(libs/glfw/deps)
-    list(APPEND PROJ_SRC
-        libs/glfw/deps/glad_gl.c
-        )
 endif(GRAPHICSENGINE_SUPPORT_GLAD)
 
 
@@ -93,9 +88,9 @@ endif(GRAPHICSENGINE_SUPPORT_GLEW)
 ### GLM
 ###
 if(GRAPHICSENGINE_SUPPORT_GLM)
-    set(GLM_DIR "libs/glm/cmake/glm")
+    
     if(WIN32)
-        find_package(GLM REQUIRED)
+        add_subdirectory(libs/glm)
         list(APPEND PROJ_LINK_LIBS glm::glm)
     else()
         find_package(glm REQUIRED)

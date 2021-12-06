@@ -20,23 +20,32 @@ void GameLogic::Init(){
     ;
     std::vector<GLfloat> t = ReadObjFile("untitled.obj");
     std::tuple<std::vector<unsigned char>, unsigned, unsigned> texture = ReadPngFile("Cube.png");
-    for(int i = 0; i < 1000; i++){
 
 
-        WorldObject *triangle = new WorldObject(vertex_shader, fragment_shader);
+    WorldObject *triangle = new WorldObject(vertex_shader, fragment_shader);
         
-        //now we generate the color 
-        std::vector<GLfloat> color;
-        for(int e = 0; e<t.size(); e++){
+    //now we generate the color 
+    std::vector<GLfloat> color;
+    for(int e = 0; e<t.size(); e++){
             color.push_back(0);
             //color.push_back(0.5);
-        }
-        triangle->LoadColor(color);
-        triangle->LoadVertices(t);
-        triangle->LoadTexture(std::get<0>(texture), std::get<1>(texture), std::get<2>(texture)); 
-        triangle->ChangeWorldPosition(glm::vec3(rand() % 30,rand() % 2 ,rand() % 30));
-        current_renderer->AddObjectToRender(triangle);
     }
+    triangle->LoadColor(color);
+    triangle->LoadVertices(t);
+    triangle->LoadTexture(std::get<0>(texture), std::get<1>(texture), std::get<2>(texture)); 
+    triangle->ChangeWorldPosition(glm::vec3(1,1,1));
+    current_renderer->AddObjectToRender(triangle);
+    
+    Light *light1 = new Light(Spotlight);
+
+    light1->LoadVertices(t);
+    light1->LoadColor(color);
+    light1->LoadTexture(std::get<0>(texture), std::get<1>(texture), std::get<2>(texture)); 
+    light1->ChangeWorldPosition(glm::vec3(10,1,1));
+    light1->light_color.store(glm::vec3(0,0,1));
+    current_renderer->AddLightToRender(light1);
+
+
     game_is_running = true;
     GameLoop();
 }

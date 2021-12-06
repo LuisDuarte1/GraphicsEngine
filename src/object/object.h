@@ -10,7 +10,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
-#include "../renderer/openglrenderer.h"
 #include "../renderer/shadermanager/openglshadermanager.h"
 #include "../renderer/texturemanager/opengltexturemanager.h"
 #include "../renderer/vaomanager/openglvaomanager.h"
@@ -51,7 +50,7 @@ class WorldObject{
         GLfloat *color_data;
         bool LoadColor(std::vector<GLfloat> colors);
         bool initialized;
-    private:
+    protected: //Protected means that a derived class can acess this methods
         std::string vertexshader;
         std::string fragmentshader;
         

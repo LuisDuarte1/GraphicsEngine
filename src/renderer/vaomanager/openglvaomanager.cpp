@@ -6,6 +6,8 @@ std::tuple<GLuint,GLuint, GLuint, GLuint> AddToVAOHashlist(GLfloat *vertex_data,
     */
 
 
+   //FIXME: check when its a light or a world object because creating a color buffer in light is unnecessary 
+
     uint8_t hash_result[SHA256_DIGEST_LENGTH]; //fill hash_result with digest
     unsigned int hash_result_size = SHA256_DIGEST_LENGTH;
 

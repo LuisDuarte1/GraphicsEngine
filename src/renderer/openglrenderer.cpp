@@ -78,6 +78,56 @@ void OpenGLRenderer::render(){
         }
     }
     object_mutex.unlock();
+    light_mutex.lock();
+    for(int i = 0; i < lights_list.size(); i++){
+        if (lights_list[i]->initialized == false){
+            lights_list[i]->InitAndGiveDataToOpenGL();
+        }
+    }
+    light_mutex.unlock();
+
+
+    
+    //Maybe before rendering the world objects, we render the lights first?
+    for(int i = 0; i < lights_list.size(); i++){
+        glUseProgram(lights_list[i]->programID);
+
+        //set mvp uniform
+        GLuint MatrixID = glGetUniformLocation(lights_list[i]->programID, "MVP");
+        glm::mat4 mvp = projectionMatrix * current_camera.load()->GetCameraMatrix() * lights_list[i]->GetModelMatrix();
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+        //set color uniform
+        glm::vec3 color = lights_list[i]->light_color.load();
+        glUniform3f(glGetUniformLocation(lights_list[i]->programID, "in_light_color"),color.x, color.y,color.z);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, lights_list[i]->vertexbuffer);
+        glVertexAttribPointer(
+            0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+            3,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+            );
+            // 3d attribute buffer : uv data
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, lights_list[i]->uvbuffer);  
+        glVertexAttribPointer(
+            1,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+            2,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+            );
+        glBindTexture(GL_TEXTURE_2D, lights_list[i]->texture);
+        glDrawArrays(GL_TRIANGLES, 0, ((lights_list[i]->vertex_data_size)/3)); // Starting from vertex 0; 3 vertices total -> 1 triangle
+    }
+
+
+
     //Now the object is sorted by their programID incresing 50fps in RenderDoc and reduzing a costly opengl call for each object
     for(const auto& keypair : objectshader_map){
         //set object's VAO
@@ -166,4 +216,11 @@ void OpenGLRenderer::InputCallback(GLFWwindow* windoww, int key, int scancode, i
     inputmessages.push(m);
     inputmutex.unlock();
     
+}
+
+bool OpenGLRenderer::AddLightToRender(Light *lightp){
+    light_mutex.lock();
+    lights_list.push_back(lightp);
+    light_mutex.unlock();
+    return true;
 }

@@ -88,14 +88,8 @@ endif(GRAPHICSENGINE_SUPPORT_GLEW)
 ### GLM
 ###
 if(GRAPHICSENGINE_SUPPORT_GLM)
-    
-    if(WIN32)
-        add_subdirectory(libs/glm)
-        list(APPEND PROJ_LINK_LIBS glm::glm)
-    else()
-        find_package(glm REQUIRED)
-        list(APPEND PROJ_LINK_LIBS glm)
-    endif(WIN32)
+    add_subdirectory(libs/glm)
+    list(APPEND PROJ_LINK_LIBS glm::glm)
 endif(GRAPHICSENGINE_SUPPORT_GLM)
 
 ###

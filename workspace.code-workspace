@@ -63,7 +63,12 @@
 			"condition_variable": "cpp",
 			"mutex": "cpp",
 			"stop_token": "cpp",
-			"thread": "cpp"
+			"thread": "cpp",
+			"list": "cpp",
+			"map": "cpp",
+			"set": "cpp",
+			"unordered_set": "cpp",
+			"shared_mutex": "cpp"
 		}
 	}
 }

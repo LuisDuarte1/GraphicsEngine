@@ -1,8 +1,8 @@
-#ifndef GAMELOGIC_H
+/*#ifndef GAMELOGIC_H
 #define GAMELOGIC_H
 #include <iostream>
 #include <vector>
-#include <time.h>       /* time */
+#include <time.h>       
 #include <random>
 #include <thread>         
 #include <chrono>
@@ -33,3 +33,4 @@ class GameLogic{
 };
 
 #endif
+*/

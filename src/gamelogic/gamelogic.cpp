@@ -1,9 +1,9 @@
-#include <iostream>
+/*#include <iostream>
 #include "gamelogic.h"
 
 GameLogic::GameLogic(OpenGLRenderer* renderer){
     /* We already assume that the renderer is already initialized and ready to render
-    */
+    
     main_camera = new Camera(glm::vec3(4,3,3), vec3(0,0,0));
     input = new InputSystem();
     current_renderer = renderer; //this doesnt need to be atomic by default because it's only suppose to write once
@@ -96,3 +96,4 @@ void GameLogic::GameLoop(){ //GameLoop tries to run at a fixed rate (120 tps, ca
     }
     return;
 }
+*/

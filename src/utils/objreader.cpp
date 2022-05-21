@@ -1,14 +1,17 @@
 #include <iostream>
+#include <string>
 #include "objreader.h"
 
-std::vector<GLfloat> ReadObjFile(std::string path_to_obj){
+std::vector<float> ReadObjFile(std::string path_to_obj){
+
+
     //Now ReadObjFile will read also the UV coordinates and must be seperated before going to the mesh array
     //Format X - Y - Z - U - V
     std::ifstream objfile(path_to_obj);
     std::string current_line;
-    std::vector<std::array<GLfloat, 3>> vertices;
-    std::vector<std::array<GLfloat, 2>> uv_coordinates;
-    std::vector<GLfloat> triangles;
+    std::vector<std::array<float, 3>> vertices;
+    std::vector<std::array<float, 2>> uv_coordinates;
+    std::vector<float> triangles;
     if(objfile.is_open()){  
         while(std::getline(objfile, current_line)){
             if(current_line[0] == '#'){continue;} //in the obj reference a # represents a comment
@@ -18,7 +21,7 @@ std::vector<GLfloat> ReadObjFile(std::string path_to_obj){
                     v 1.000000 1.000000 1.000000 
                 It's delimited by a space, in order to get them we can find the spaces and create a substring
                 and the convert it to a float and add it to the list */
-                std::array<GLfloat, 3> vertex;
+                std::array<float, 3> vertex;
                 //first we remove the v and the space to make it simpler
                 current_line.erase(0,2);
                 //a vertex must be defined in 3d space by ONLY 3 variables duh
@@ -46,7 +49,7 @@ std::vector<GLfloat> ReadObjFile(std::string path_to_obj){
                     vt 0.625000 0.750000
                     vt 0.625000 0.500000
                     vt 0.375000 1.000000*/
-                std::array<GLfloat, 2> uv_coordinate;
+                std::array<float, 2> uv_coordinate;
                 current_line.erase(0,3);
                 int index = 0;
                 int start = 0;
@@ -96,16 +99,19 @@ std::vector<GLfloat> ReadObjFile(std::string path_to_obj){
                     index++;
 
                 }
-                triangle[index] = (int)current_line.substr(start, end-start)[0] - 48; //this is ascii 48 is where 1
-                uv[index] = (int)current_line.substr(start, end-start)[2] - 48;
+                std::string number = current_line.substr(start, end-start);
+                int slash = number.find("/");
+
+                triangle[index] = std::stoi(number.substr(0, slash)); //this is ascii 48 is where 1
+                uv[index] = std::stoi(number.substr(slash+1, end-slash+1));
 
                 //now that we have the triangle we will append to triangles the vertices coordinates of each 
                 //triangle
                 for(int i = 0; i < 3; i++){
                     int vertex = triangle[i] - 1; 
                     int uvs = uv[i] - 1;
-                    std::array<GLfloat, 3> v = vertices[vertex]; 
-                    std::array<GLfloat, 2> uv_coordinate = uv_coordinates[uvs];
+                    std::array<float, 3> v = vertices[vertex]; 
+                    std::array<float, 2> uv_coordinate = uv_coordinates[uvs];
                     triangles.push_back(v[0]);
                     triangles.push_back(v[1]);
                     triangles.push_back(v[2]);
@@ -117,7 +123,7 @@ std::vector<GLfloat> ReadObjFile(std::string path_to_obj){
         return triangles;
     } else{
         fprintf(stderr, "Couldn't Open File %s", path_to_obj);
-        std::vector<GLfloat> error = {-1000, -1000, -1000};
+        std::vector<float> error = {-1000, -1000, -1000};
         return error;
     }
 }

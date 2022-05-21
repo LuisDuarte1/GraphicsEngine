@@ -3,10 +3,11 @@
 
 #include <iostream>
 #include <atomic>
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE 
+#define GLM_FORCE_LEFT_HANDED 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-using namespace glm;
 
 class Camera{
     public:
@@ -17,6 +18,8 @@ class Camera{
         inline void ChangeWorldPosition(glm::vec3 newposition){world_position.store(newposition); };
         inline glm::vec3 GetWorldPosistion(){return world_position.load();};
         bool initialized = false;
+        //it is controllable when it can be changed because of player input
+        //this should be disabled for instance for cutscnes
         std::atomic<bool> controllable;
     private:
         std::atomic<glm::vec3> world_position;

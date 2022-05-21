@@ -1,25 +1,38 @@
-cmake_minimum_required(VERSION 2.8)
-project(GraphicsEngine)
-set (CMAKE_CXX_STANDARD 17)
+cmake_minimum_required(VERSION 3.2)
+
 
 
 ###
 ### Options
 ###
 # Unsed previous parameters from cache for the sake of dynamism
-unset(GRAPHICSENGINE_SUPPORT_GLFW CACHE)
-unset(GRAPHICSENGINE_SUPPORT_GLAD CACHE)
-unset(GRAPHICSENGINE_SUPPORT_GLEW CACHE)
 unset(GRAPHICSENGINE_SUPPORT_GLM CACHE)
 unset(GRAPHICSENGINE_SUPPORT_OPENSSL CACHE)
+unset(GRAPHICSENGINE_SUPPORT_VULKAN CACHE)
+unset(GRAPHICSENGINE_SUPPORT_TASKUS CACHE)
+unset(GRAPHICSENGINE_USE_VCPKG CACHE)
+
 
 # Enable desired libs
-option(GRAPHICSENGINE_SUPPORT_GLFW "Set ON/OFF to enable/disable GLFW support." ON)
-option(GRAPHICSENGINE_SUPPORT_GLAD "Set ON/OFF to enable/disable GLAD support." ON)
-option(GRAPHICSENGINE_SUPPORT_GLEW "Set ON/OFF to enable/disable GLEW support." ON)
-option(GRAPHICSENGINE_SUPPORT_GLM "Set ON/OFF to enable/disable GLM support." ON)
-option(GRAPHICSENGINE_SUPPORT_OPENSSL "Set ON/OFF to enable/disable OpenSLL support." ON)
+option(GRAPHICSENGINE_SUPPORT_GLM "Set ON/OFF to enable/disable GLM support" ON)
+option(GRAPHICSENGINE_SUPPORT_OPENSSL "Set ON/OFF to enable/disable OpenSSL support." ON)
+option(GRAPHICSENGINE_SUPPORT_VULKAN "Set ON/OFF to enable/disable Vulkan support." ON)
+option(GRAPHICSENGINE_SUPPORT_TASKUS "Set ON/OFF to enable/disable Taskus support" ON)
+option(GRAPHICSENGINE_USE_VCPKG "Use VCPKG in Windows" ON)
 
+if(WIN32)
+    if(GRAPHICSENGINE_USE_VCPKG)
+        if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+            #use my own path in cmake_toolchain_file
+            #you should replace this on your machine or specify it as a argument while configurng
+            set(CMAKE_TOOLCHAIN_FILE "C:/dev-bin/vcpkg/scripts/buildsystems/vcpkg.cmake")
+        endif()
+    endif()
+    
+endif()
+
+project(GraphicsEngine)
+set (CMAKE_CXX_STANDARD 20)
 
 ###
 ### Initialization
@@ -27,62 +40,41 @@ option(GRAPHICSENGINE_SUPPORT_OPENSSL "Set ON/OFF to enable/disable OpenSLL supp
 # Project parameters
 set(PROJ_LINK_LIBS)
 set(PROJ_SRC)
-find_library( atomic-lib atomic )
-list(APPEND PROJ_LINK_LIBS atomic)
+set(PROJ_SHADERS)
+if(NOT WIN32)
+    find_library( atomic-lib atomic )
+    list(APPEND PROJ_LINK_LIBS atomic)
+endif()
 if(WIN32)
-    set(CMAKE_RC_COMPILER "windres") #Windows only, for some reason mys2 mingw 64 gets the rc compiler wrong
+    #set(CMAKE_RC_COMPILER "windres") #Windows only, for some reason mys2 mingw 64 gets the rc compiler wrong
     find_package(OpenGL REQUIRED)
 
     list(APPEND PROJ_LINK_LIBS opengl32)
 endif(WIN32)
 
 # Add all files/folders under src folder automatically to the project
-file(GLOB_RECURSE PROJ_SRC src/*.h src/*.cpp)
-
+file(GLOB_RECURSE PROJ_SRC_CPP src/*.cpp)
+file(GLOB_RECURSE PROJ_SRC_H src/*.h)
+file(GLOB PROJ_SHADERS src/shaders/*.vert src/shaders/*.frag)
 
 ###
 ### Compiler settings
 ###
 
 
-
 ###
-### GLFW
+### Taskus
 ###
-if(GRAPHICSENGINE_SUPPORT_GLFW)
-    # Disable internal builds
-    unset(GLFW_BUILD_EXAMPLES CACHE)
-    unset(GLFW_BUILD_TESTS CACHE)
-    unset(GLFW_BUILD_DOCS CACHE)
-    option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
-    option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
-    option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 
-    add_subdirectory(libs/glfw)
-    list(APPEND PROJ_LINK_LIBS glfw)
-endif(GRAPHICSENGINE_SUPPORT_GLFW)
+#MINGW IS NOT SUPPORTED BECAUSE OF TASKUS
+if(GRAPHICSENGINE_SUPPORT_TASKUS)
+    add_subdirectory(libs/Taskus)
+    list(APPEND PROJ_LINK_LIBS Taskus)
+endif()
 
 
-###
-### GLAD
-###
-if(GRAPHICSENGINE_SUPPORT_GLAD)
-    include_directories(libs/glfw/deps)
-endif(GRAPHICSENGINE_SUPPORT_GLAD)
 
 
-###
-### GLEW
-###
-if(GRAPHICSENGINE_SUPPORT_GLEW)
-    # Disable internal builds
-    unset(BUILD_UTILS CACHE)
-    option(BUILD_UTILS "utilities" OFF)
-
-    add_subdirectory(libs/glew/build/cmake)
-    include_directories(libs/glew/include)
-    list(APPEND PROJ_LINK_LIBS glew)
-endif(GRAPHICSENGINE_SUPPORT_GLEW)
 
 ###
 ### GLM
@@ -96,19 +88,50 @@ endif(GRAPHICSENGINE_SUPPORT_GLM)
 ### OpenSSL
 ###
 if(GRAPHICSENGINE_SUPPORT_OPENSSL)
-    find_package(OpenSSL)
+    find_package(OpenSSL REQUIRED)
     list(APPEND PROJ_LINK_LIBS OpenSSL::SSL)
     list(APPEND PROJ_LINK_LIBS OpenSSL::Crypto)
 endif(GRAPHICSENGINE_SUPPORT_OPENSSL)
 
+###
+### Vulkan
+###
+
+if(GRAPHICSENGINE_SUPPORT_VULKAN)
+    if(WIN32)
+        set(ENV{VULKAN_SDK} "C:\\VulkanSDK\\1.2.198.1") #default installation for vulkansdk in windows
+    endif(WIN32)
+    
+    find_package(Vulkan REQUIRED)
+    list(APPEND PROJ_LINK_LIBS ${Vulkan_LIBRARIES})
+    include_directories(${Vulkan_INCLUDE_DIRS})
+endif(GRAPHICSENGINE_SUPPORT_VULKAN)
+
+
+
+
+### Compile the shaders after building the source
+
+foreach(shader ${PROJ_SHADERS})
+    set(SHADER_FILENAME)
+    
+    cmake_path(GET shader FILENAME SHADER_FILENAME)
+    message(STATUS "Adding shader to compile: "${SHADER_FILENAME})
+    set(COMMAND_TO_EXECUTE ${Vulkan_GLSLC_EXECUTABLE} ${shader} -o ${SHADER_FILENAME}.spv)
+    add_custom_target(${SHADER_FILENAME} ALL 
+        COMMAND ${COMMAND_TO_EXECUTE})
+
+endforeach()
 
 ###
 ### Generating the project files
 ###
-add_executable(${PROJECT_NAME} ${PROJ_SRC})
+add_executable(${PROJECT_NAME} ${PROJ_SRC_CPP}  ${PROJ_SRC_H})
 
 
 ###
 ### Linking to the project
 ###
 target_link_libraries(${PROJECT_NAME} ${PROJ_LINK_LIBS})
+
+

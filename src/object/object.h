@@ -5,54 +5,106 @@
 #include <iostream>
 #include <vector>
 #include <atomic>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <functional>
+
+#include <vulkan/vulkan.h>
+
+
+class VulkanRenderer;
+class VulkanTexture;
+#include "../renderer/vulkan/vulkanrenderer.h"
+
+#include "../../libs/VulkanMemoryAllocator/include/vk_mem_alloc.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE 
+#define GLM_FORCE_LEFT_HANDED 
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
-#include "../renderer/shadermanager/openglshadermanager.h"
-#include "../renderer/texturemanager/opengltexturemanager.h"
-#include "../renderer/vaomanager/openglvaomanager.h"
 
-using namespace glm;
+struct Vertex{
+    glm::vec3 pos;
+    glm::vec3 color;
+    glm::vec2 uv_coordinates;
 
-//this class should only be initialized when OpenGlRenderer has initialized the window.
+    bool operator==(Vertex& a);
+
+    static VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        return bindingDescription;
+    }
+
+    static std::vector<VkVertexInputAttributeDescription> getAttributeDescription(){
+        std::vector<VkVertexInputAttributeDescription> s;
+        s.resize(3);
+        s[0].binding = 0;
+        s[0].location = 0;
+        s[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        s[0].offset = offsetof(Vertex, pos);
+
+        s[1].binding = 0;
+        s[1].location = 1;
+        s[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        s[1].offset = offsetof(Vertex, color);
+
+        s[2].binding = 0;
+        s[2].location = 2;
+        s[2].format = VK_FORMAT_R32G32_SFLOAT;
+        s[2].offset = offsetof(Vertex, uv_coordinates);
+
+
+        return s;
+
+
+    }
+
+
+
+};
+
 class WorldObject{
     public:
-        WorldObject(std::string vertexshader, std::string fragmentshader);
-        GLuint programID;
-        GLuint texture;
+        WorldObject();
 
-        GLfloat *vertex_data;
-        GLfloat *uv_data;
-
-        unsigned char *texture_data;
-        int texture_data_size;
-        unsigned width, height;
-
-        int vertex_data_size;
-        bool LoadVertices(std::vector<GLfloat> vertices);
-        //For now each object has it's own VAO, its inefficient because it doesnt allow for batched rendering, might change it later
-        GLuint VertexArrayID;
-        GLuint vertexbuffer;
-
-        GLuint uvbuffer;
+        std::vector<uint16_t> indexdata;
+        VkBuffer indexbuffer;
+        VmaAllocation indexalloc;
         
-        bool LoadTexture(std::vector<unsigned char> texturedata, unsigned width_, unsigned height_);
+        std::vector<Vertex> verticesdata;
+        VkBuffer vertexbuffer;
 
-        void InitAndGiveDataToOpenGL();
+        double calc = 0;
+
         inline void ChangeWorldPosition(glm::vec3 newpos){world_position.store(newpos);};
+
+        inline void setAlbedoTexture(VulkanTexture * newAlbedoTexture){albedoTexture = newAlbedoTexture;};
+        inline VulkanTexture * getAlbedoTexture(){return albedoTexture;}; 
+
+        void changeRotation(glm::vec3 rotation);
         
+
+
+        void SendToGPU(VmaAllocator allocator, VulkanRenderer * renderer); //this should only be called when vertices are fully loaded
+        void cleanup(VmaAllocator allocator);
+        VmaAllocation alloc;
+
+
+        unsigned width, height;
 
         glm::mat4 GetModelMatrix();
 
-        GLuint colorbuffer; //color buffer size should be the same as vertex buffer size
-        GLfloat *color_data;
-        bool LoadColor(std::vector<GLfloat> colors);
-        bool initialized;
-    protected: //Protected means that a derived class can acess this methods
-        std::string vertexshader;
-        std::string fragmentshader;
+    
+
+        bool LoadObject(std::vector<float> vertices ,std::vector<float> colors);
+        bool initialized = false;
+
+        int pipeline_id;
+
+    private: 
+
         
         std::atomic<glm::vec3> world_position;
         //matrices specific to the object
@@ -60,6 +112,7 @@ class WorldObject{
         //TODO: implement rotation for a specific object
         std::atomic<glm::mat4> rotation_matrix;
 
+        VulkanTexture * albedoTexture = nullptr;
 
 };
 

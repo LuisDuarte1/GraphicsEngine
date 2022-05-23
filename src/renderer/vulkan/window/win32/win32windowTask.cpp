@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include <Windows.h>
 #include "win32windowTask.h"
 
@@ -11,3 +12,5 @@ void Win32WindowTask::runTaskFunction(){
     //process message
     
 }
+
+#endif

@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include <Windows.h>
 #include "win32window.h"
 
@@ -111,3 +112,5 @@ void Win32Window::createSurface(VkInstance instance){
 Win32Window::~Win32Window(){
 
 }
+
+#endif

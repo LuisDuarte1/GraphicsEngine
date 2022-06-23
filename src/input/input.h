@@ -10,7 +10,7 @@
 
 
 struct InputMessage{
-    char keycode;
+    std::string keycode;
     bool keyDown; //useful for representing if key is down or up 
     //TODO: mouse input 
 };
@@ -19,9 +19,9 @@ class InputSystem{
     public:
         InputSystem();
         void ProcessInputMessage(InputMessage m);
-        bool GetIfKeyIsPressed(char wchar);
+        bool GetIfKeyIsPressed(std::string wchar);
     private:
-        std::map<char, bool> keyboardMap;
+        std::map<std::string, bool> keyboardMap;
 
 };
 

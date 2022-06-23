@@ -80,7 +80,6 @@ SwapChainSupportDetails VulkanRenderer::querySwapChainSupport() {
 
 
 void VulkanRenderer::getRequiredExtensions() {
-    //TODO: get extensions from window
     std::vector <const char * > rWindow = window->getRequiredExtensions();
     for(const char * r : rWindow) InstanceExtensions.push_back(r);
 }
@@ -370,15 +369,12 @@ void VulkanRenderer::cleanup(){
 
 void VulkanRenderer::render(){
     //we need to get the delta time so we need to get the time that it took to draw the frame
-    while(true){ //TODO: while it should render
-        auto start = std::chrono::high_resolution_clock::now();
-        drawFrame();
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> diff = end - start;
-        delta_time.store(diff.count());
-        frame_count++;
-    }
-    vkDeviceWaitIdle(device);
+    auto start = std::chrono::high_resolution_clock::now();
+    drawFrame();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = end - start;
+    delta_time.store(diff.count());
+    frame_count++;
 }
 
 bool VulkanRenderer::checkValidationLayerSupport(){

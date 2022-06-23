@@ -7,39 +7,46 @@
 #include <thread>
 #include <Taskus.h>
 
+#include "ecs/component/componentSystem.h"
+#include "ecs/system/systemManager.h"
+
 #include "renderer/vulkan/vulkanrenderer.h"
 #include "renderer/vulkan/vulkan-pipeline/vulkan-pipeline.h"
 #include "renderer/vulkan/window/baseWindow.h"
+#include "renderer/vulkan/renderSystem.h"
+#include "renderer/vulkan/renderObjectComponent.h"
+
+
 #include "utils/objreader.h"
 #include "object/object.h"
 //#include "utils/objreader.h"
 //#include "gamelogic/gamelogic.h"
 
 #ifdef WIN32
-    #include "renderer/vulkan/window/win32/win32windowTask.h"
+    #include "renderer/vulkan/window/win32/win32windowSystem.h"
 #endif
 
 
 int main()
 {
-    
-    Taskus::TaskPool t;   
-    t.start();
+    ComponentSystem & tcomp = ComponentSystem::getInstance();
+    SystemManager & sysMng = SystemManager::getInstance();
+    if(!tcomp.registerComponentType<RenderObjectComponent>()) abort();
+    Taskus::TaskPool tPool;
+    tPool.start();
     VulkanRenderer* renderergl = nullptr;
     #ifdef WIN32
-        Win32WindowTask *windowTask = new Win32WindowTask("Vulkan engine", 1024, 800);
-        t.addTask(windowTask);
-        windowTask->waitToFinish();
+        Win32WindowSystem * windowSystem = new Win32WindowSystem("Vulkan Engine", 1024, 794);
+        sysMng.addSystem(windowSystem);
+        sysMng.updateAllSystems(tPool);
         renderergl = new VulkanRenderer(win32Instance);
     #endif
 
     #ifdef UNIX
         return 1;
     #endif
-
-    //renderergl->createWindow(;
+    VulkanRenderSystem * renderSystem = new VulkanRenderSystem(renderergl);
     renderergl->InitVulkan();
-    //GameLogic* gameloop = new GameLogic(renderergl);
 
     Camera *camera = new Camera(glm::vec3(1.5f,-0.75f,6), glm::vec3(0,0,0));
     renderergl->SelectCurrentCamera(camera);
@@ -89,9 +96,12 @@ int main()
     
 
     //std::thread game_thread(&GameLogic::Init, gameloop);
-    renderergl->render();
+    sysMng.addSystem(renderSystem);
+    while(true){
+        sysMng.updateAllSystems(tPool);
+    }
     renderergl->cleanup();
-    t.stop();
+    tPool.stop();
     //game_thread.join();
 
     return 0;

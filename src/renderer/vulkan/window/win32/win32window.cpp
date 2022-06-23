@@ -6,15 +6,16 @@ const char g_szClassName[] = "vulkanwindowclass";
 
 
 void Win32Window::processInput(LPARAM lParam, bool keyDown){
-    char inputchar;
-    int r = GetKeyNameText(lParam, &inputchar, 1); //every caracter should be one bit only? 
+    //TODO: include wide character support (UTF-16)
+    char input[5] = {0,0,0,0,0};
+    int r = GetKeyNameText(lParam, input, 5); //every caracter should be one byte only?, 
     //TODO: support other keyboard layouts by using the wide version of windows.h
     if(r == 0){
         std::cout << "Couldn't get the key name.\n";
         assert(false);
     }
     InputMessage m;
-    m.keycode = inputchar;
+    m.keycode = std::string(input);
     m.keyDown = keyDown;
     queuedInputsMutex.lock();
     queuedInputs.push_back(m);

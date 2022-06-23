@@ -52,6 +52,7 @@ if(WIN32)
     list(APPEND PROJ_LINK_LIBS opengl32)
 endif(WIN32)
 
+#copy src folder into build for additional pre_processing steps without affection the actual source
 # Add all files/folders under src folder automatically to the project
 file(GLOB_RECURSE PROJ_SRC_CPP src/*.cpp)
 file(GLOB_RECURSE PROJ_SRC_H src/*.h)
@@ -107,10 +108,22 @@ if(GRAPHICSENGINE_SUPPORT_VULKAN)
     include_directories(${Vulkan_INCLUDE_DIRS})
 endif(GRAPHICSENGINE_SUPPORT_VULKAN)
 
+###
+### Python
+###
+find_package(Python COMPONENTS Interpreter REQUIRED)
+if(Python_VERSION_MAJOR LESS 3)
+    message(FATAL_ERROR "Didn't found a python3 instalation, but found a python2 instalation which is NOT compatible.")
+endif()
 
+
+#create preprocessor python script target
+set(PREPROCESSOR_SCRIPT_COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/additional_preprocessing.py)
+add_custom_target("Additional_Preprocessor_Script" ALL COMMAND ${PREPROCESSOR_SCRIPT_COMMAND})
 
 
 ### Compile the shaders after building the source
+add_executable(${PROJECT_NAME} ${PROJ_SRC_CPP}  ${PROJ_SRC_H})
 
 foreach(shader ${PROJ_SHADERS})
     set(SHADER_FILENAME)
@@ -120,14 +133,13 @@ foreach(shader ${PROJ_SHADERS})
     set(COMMAND_TO_EXECUTE ${Vulkan_GLSLC_EXECUTABLE} ${shader} -o ${SHADER_FILENAME}.spv)
     add_custom_target(${SHADER_FILENAME} ALL 
         COMMAND ${COMMAND_TO_EXECUTE})
-
+    add_dependencies(${PROJECT_NAME} ${SHADER_FILENAME})
 endforeach()
 
 ###
 ### Generating the project files
 ###
-add_executable(${PROJECT_NAME} ${PROJ_SRC_CPP}  ${PROJ_SRC_H})
-
+add_dependencies(${PROJECT_NAME} "Additional_Preprocessor_Script")
 
 ###
 ### Linking to the project

@@ -122,7 +122,7 @@ std::vector<float> ReadObjFile(std::string path_to_obj){
         }
         return triangles;
     } else{
-        fprintf(stderr, "Couldn't Open File %s", path_to_obj);
+        fprintf(stderr, "Couldn't Open File %s", path_to_obj.c_str());
         std::vector<float> error = {-1000, -1000, -1000};
         return error;
     }

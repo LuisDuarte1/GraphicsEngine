@@ -46,13 +46,20 @@ VulkanTexture::VulkanTexture(uint8_t * texture, uint32_t w, uint32_t h, VulkanRe
     if( t != VK_SUCCESS){
         throw std::runtime_error("Couldn't create texture image on the gpu...");
     } 
+
+    VkImageSubresourceRange range;
+    range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    range.baseMipLevel = 0;
+    range.levelCount = 1;
+    range.baseArrayLayer = 0;
+    range.layerCount = 1;
+
+    //queue families are required to transfer ownership
+    //FIXME (luisd): this can probably be optimized to reduce vulkan calls made while creating a texture
+    QueueFamilyIndices queueIndicies = renderer->findQueueFamilies(renderer->GetCurrentPhysicalDevice());
+
     renderer->customImmediateSubmitTransfer([&](VkCommandBuffer commandBuffer){
-        VkImageSubresourceRange range;
-        range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        range.baseMipLevel = 0;
-        range.levelCount = 1;
-        range.baseArrayLayer = 0;
-        range.layerCount = 1;
+
 
         VkImageMemoryBarrier imageBarrierTransfer{};
         imageBarrierTransfer.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -80,6 +87,23 @@ VulkanTexture::VulkanTexture(uint8_t * texture, uint32_t w, uint32_t h, VulkanRe
 
         vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
 
+        //Transfer queue families, needed by some gpus that don't share the transfer queue with the graphics queue (AKA, most discrete desktop gpu's)
+        VkImageMemoryBarrier transferOwnership{};
+        transferOwnership.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        transferOwnership.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        transferOwnership.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        transferOwnership.image = image;
+        transferOwnership.subresourceRange = range;
+        transferOwnership.srcQueueFamilyIndex = queueIndicies.transferFamily.value();
+        transferOwnership.dstQueueFamilyIndex = queueIndicies.presentationFamily.value();
+
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,0,0,nullptr,0,nullptr,1,&transferOwnership);
+        
+    }, false);
+
+    renderer->customImmediateSubmitTransfer([&](VkCommandBuffer commandBuffer){
+
         //after having the correct pixel data in the image we need to make it readable again
 
         VkImageMemoryBarrier imageBarrierReadable{};
@@ -89,12 +113,12 @@ VulkanTexture::VulkanTexture(uint8_t * texture, uint32_t w, uint32_t h, VulkanRe
         imageBarrierReadable.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         imageBarrierReadable.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         imageBarrierReadable.image = image;
-        imageBarrierTransfer.subresourceRange = range;
+        imageBarrierReadable.subresourceRange = range;
 
 
         vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0,nullptr,0,nullptr,1,&imageBarrierReadable);
-    }, true);
+    },true);
 
     VkImageViewCreateInfo imageViewInfo = renderer->getImageViewCreateInfo(image_format, image, VK_IMAGE_ASPECT_COLOR_BIT);
     vkCreateImageView(renderer->GetCurrentDevice(), &imageViewInfo, nullptr, &imageView);

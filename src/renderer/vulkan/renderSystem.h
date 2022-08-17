@@ -6,6 +6,7 @@
 
 #include "vulkanrenderer.h"
 #include "../../ecs/system/system.h"
+#include "../../utils/objreader.h"
 #include "renderObjectComponent.h"
 
 class VulkanRenderSystem : public System{
@@ -22,6 +23,11 @@ class VulkanRenderSystem : public System{
         void order(){}
     
     private:
+
+        size_t lastRenderComponentSize = 0;
+
+        void InitializeObject(VmaAllocator allocator, int i, IComponent<RenderObjectComponent>& componentRender);
+
         VulkanRenderer * renderer;
 };
 

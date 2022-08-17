@@ -132,6 +132,7 @@ void SystemManager::updateAllSystems(Taskus::TaskPool& tPool){
     //we maybe don't use the isRepeatable flag to make it easier to add new systems at runtime? 
     //so we implement this as a loop 
     tPool.addTask(entryTask);
+    //Taskus::SaveDebugTaskFlowSVG("system_flow.svg", entryTask);
     endTask->waitToFinish();
 }
 
@@ -158,6 +159,7 @@ void SystemManager::addSystem(System * newSystem){
         //add the task after the entryTask above other tasks
         (*entryTask) += newSystemTask;
         if(found_conflict.size() == 0){
+            (*newSystemTask) += endTask;
             return;
         }
         else{
@@ -197,6 +199,10 @@ void SystemManager::addSystem(std::vector<System *> dependenciesSystem, System *
     SystemTask * newsysTask = new SystemTask(newSystem);
     for(Taskus::Task* dTask: dependencyTasks){
         *(dTask) += newsysTask;
+    }
+    if(totalConflicts.size() == 0){
+        *(newsysTask) += endTask;
+        return;
     }
     for(Taskus::Task* cTask: totalConflicts){
         *(cTask) += newsysTask;

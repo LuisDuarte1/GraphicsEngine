@@ -27,6 +27,7 @@ def component_class_rule(file: TextIOWrapper):
                 exit(1)
             var_names.append(line.split('(')[1].split(',')[1].split(')')[0])
         if "void addNewComponent()" in line and found_component_class==True:
+            #TODO: check for changes if class members change add/remove if needed
             skip = True
         if "COMPONENT_CLASS_END" in line and not "#define" in line:
             if skip:

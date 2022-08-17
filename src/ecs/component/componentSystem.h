@@ -35,19 +35,19 @@ class ComponentSystem{
             return true;
         }
 
-        template<class T> IComponent<T>* getComponent(uint32_t entityID){
+        template<class T> size_t getComponent(uint32_t entityID){
             for(auto i: components){
                 if(i.type() == typeid(IComponent<T>*)){
                     IComponent<T> * icomp = std::any_cast<IComponent<T>*>(i);
                     for(size_t i = 0; i < icomp->entityIDs.size(); i++){
                         if(entityID == icomp->entityIDs[i]){
-                            return &icomp;
+                            return i;
                         }
                     }
                 }
             }
 
-            return nullptr;
+            return size_t(int(-1));
         }
 
         template<class T> bool addComponent(uint32_t entityID){
@@ -55,6 +55,9 @@ class ComponentSystem{
                 if(i.type() == typeid(IComponent<T>*)){
                     T r = {};
                     IComponent<T> * icomp = std::any_cast<IComponent<T>*>(i);
+                    //find if there is already a component
+                    for(uint32_t i : icomp->entityIDs) if(i == entityID) return false;
+                    icomp->addNewComponent();
                     //TODO: function for adding new entityID to component
                     icomp->entityIDs.push_back(entityID); 
                     return true;                    

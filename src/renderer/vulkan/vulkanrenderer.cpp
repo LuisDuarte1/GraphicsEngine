@@ -322,13 +322,8 @@ void VulkanRenderer::createLogicalDevice(){
 
 void VulkanRenderer::cleanup(){
 
-    //vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-    for (std::vector<WorldObject *> objlist : object_list){
-        for(WorldObject * obj : objlist){
-            obj->cleanup(allocator);
-        }
-        
-    }
+    //TODO: cleanup system components
+    
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
@@ -367,10 +362,10 @@ void VulkanRenderer::cleanup(){
 }
 
 
-void VulkanRenderer::render(){
+void VulkanRenderer::render(IComponent<RenderObjectComponent> * iComp){
     //we need to get the delta time so we need to get the time that it took to draw the frame
     auto start = std::chrono::high_resolution_clock::now();
-    drawFrame();
+    drawFrame(iComp);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
     delta_time.store(diff.count());
@@ -562,8 +557,6 @@ void VulkanRenderer::AddPiplineToList(VulkanPipeline * pipeline){
     pipeline->createUniformBuffersGPU(device, allocator, imageCount, *pipelineDetails);
     pipeline->createPipelineLayout(swapChainExtent.width, swapChainExtent.height, swapChainExtent, device, extraDSetsLayout);
     pipeline->createPipeline(device, renderPass);
-    pipeline->pipeline_id = object_list.size();
-    object_list.push_back({});
     pipelines.push_back(pipeline);
 }
 
@@ -663,7 +656,7 @@ void VulkanRenderer::createSemaphores() {
 }
 
 
-void VulkanRenderer::drawFrame(){
+void VulkanRenderer::drawFrame(IComponent<RenderObjectComponent> * iComp){
     graphicsMutex.lock();
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &inFlightFences[currentFrame]);
@@ -673,19 +666,10 @@ void VulkanRenderer::drawFrame(){
         vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
     }
     //update every ubo
-    for(std::vector<WorldObject *> obj_list_pipeline : object_list){
-        for(WorldObject * obj : obj_list_pipeline){
-            glm::vec3 rot;
-            rot.x = 0;
-            obj->calc = obj->calc + (delta_time * 2);
-            if(obj->calc > 360){
-                obj->calc = (delta_time * 2);
-
-            }
-            rot.y = obj->calc;
-            rot.z = 0;
-            obj->changeRotation(rot);
-        }
+    for(size_t i = 0; i < iComp->entityIDs.size();i++){
+        iComp->rotation_matrix[i]= glm::rotate(glm::mat4(1),
+            iComp->degrees_acc[i],glm::vec3(0,1,0));
+        iComp->degrees_acc[i] += 2.0 * delta_time.load();
     }
     updateUBOs(imageIndex);
     //then update the command buffer, because some attributes might have changed
@@ -744,14 +728,6 @@ void VulkanRenderer::createAllocator(){
     vmaCreateAllocator(&allocatorInfo, &allocator);
 }
 
-bool VulkanRenderer::AddObjectToRender(WorldObject *objp){
-    //this assumes that the object already has the vertex data and the color data initialized
-    object_list_mutex.lock();
-    
-    object_list[objp->pipeline_id].push_back(objp);
-    object_list_mutex.unlock();
-    return true;
-}
 
 void VulkanRenderer::getPipelineDeviceParameters(){
     VkPhysicalDeviceProperties properties;
@@ -815,9 +791,12 @@ void VulkanRenderer::immediateSubmitTransfer(VkBuffer src, VkBuffer dst, size_t 
 
 
 void VulkanRenderer::updateUBOs(int frame_id){
-    for(int i = 0; i < pipelines.size(); i++){
+    IComponent<RenderObjectComponent> * iObjects = ComponentSystem::getInstance().getComponentList<RenderObjectComponent>();
+    size_t objCurrentPipeline = 0;
+    for(size_t i = 0; i < pipelines.size(); i++){
         std::vector<UniformBufferType> pipeline_types= pipelines[i]->getBufferTypes();
         std::vector<bool> pipeline_dynamic = pipelines[i]->getBufferDynamic();
+        int pipelineID = pipelines[i]->pipeline_id;
         for(int e = 0; e < pipeline_types.size(); e++){
             if(pipeline_dynamic[e]){
                 //if it's dynamic we need to update the whole thing, this could be optimized further by only
@@ -828,12 +807,15 @@ void VulkanRenderer::updateUBOs(int frame_id){
                 switch(pipeline_types[e]){
                     case(SIMPLE_TYPE):
                         std::vector<SimpleUniformBuffer> simple_ubo_list;
+                        while(objCurrentPipeline < iObjects->entityIDs.size() && iObjects->pipeline_id[objCurrentPipeline] == pipelineID){
                         //we iterate by all objects and update it
-                        for(int u = 0; u < object_list[i].size(); u++){
                             SimpleUniformBuffer simple_ubo;
-                            simple_ubo.proj_matrix = proj_matrix * current_camera.load()->GetCameraMatrix() * object_list[i][u]->GetModelMatrix();
+                            simple_ubo.proj_matrix = proj_matrix * current_camera.load()->GetCameraMatrix() 
+                                * (glm::translate(iObjects->world_position[objCurrentPipeline]) * iObjects->scaling_matrix[objCurrentPipeline] * iObjects->rotation_matrix[objCurrentPipeline]);
                             simple_ubo_list.push_back(simple_ubo);
+                            objCurrentPipeline++;
                         }
+
                         pipelines[i]->updateUniformBuffer(device, allocator, simple_ubo_list.data(), 
                             frame_id,e, simple_ubo_list.size());
                         break;
@@ -877,50 +859,55 @@ void VulkanRenderer::updateCommandBuffer(int frame_id){
             renderPassInfo.pClearValues = clears;
 
 
-            vkCmdBeginRenderPass(commandBuffers[frame_id], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(commandBuffers[frame_id], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+        IComponent<RenderObjectComponent> * iComp = ComponentSystem::getInstance().getComponentList<RenderObjectComponent>();
+        size_t objCurrentPipeline = 0;
         for(VulkanPipeline * pipeline : pipelines){
 
             vkCmdBindPipeline(commandBuffers[frame_id], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+            size_t o = 0; //object counter within the pipeline
 
 
-            for(int o = 0; o < object_list[pipeline->pipeline_id].size(); o++){
-                WorldObject * obj = object_list[pipeline->pipeline_id][o];
-                if(obj->initialized == false){ //if it's not initiliazed skip it entirely, this can be done on other threads
+
+            while(objCurrentPipeline < iComp->entityIDs.size() && pipeline->pipeline_id == iComp->pipeline_id[objCurrentPipeline] ){
+                if(iComp->initialized[objCurrentPipeline] == false){ //if it's not initiliazed skip it entirely, this can be done on other threads
+                    objCurrentPipeline++;
                     continue;
                 }
                 VkDeviceSize offset = 0;
-                vkCmdBindVertexBuffers(commandBuffers[frame_id], 0, 1, &(obj->vertexbuffer), &offset);
+                vkCmdBindVertexBuffers(commandBuffers[frame_id], 0, 1, &(iComp->vertex_buffer[objCurrentPipeline]), &offset);
                 std::vector<std::vector<VkDescriptorSet>> descriptorSets = pipeline->getDescriptorSet();
                 std::vector<bool> DynamicSet = pipeline->getBufferDynamic();
                 std::vector<UniformBufferType> buffertypes = pipeline->getBufferTypes();
                 for(int e = 0; e < descriptorSets.size(); e++){
                     std::vector<VkDescriptorSet> dsets = descriptorSets[e];
                     
-                    uint32_t dynamic_offsets = DynamicSet[e]==true ? pipeline->getSizeAligned(buffertypes[e]) * o : 0;
+                    uint32_t dynamic_offsets = DynamicSet[e]==true ? pipeline->getSizeAligned(buffertypes[objCurrentPipeline]) * o : 0;
                     //uint32_t dynamic_offsets =  0;
                     uint32_t is_dynamic = DynamicSet[e]==true ? 1 : 0;
-                    if(is_dynamic == 1){
-
-                    }
+                    
                     vkCmdBindDescriptorSets(commandBuffers[frame_id], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipelineLayout(),
                         0, 1, &dsets[frame_id],is_dynamic, &dynamic_offsets);
                     
                     //bind albedo texture if it exists
-                    VulkanTexture * albedo = obj->getAlbedoTexture();
+                    VulkanTexture * albedo = iComp->texture[objCurrentPipeline];
                     if(albedo != nullptr){
                         vkCmdBindDescriptorSets(commandBuffers[frame_id], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipelineLayout(),
                             1,1, albedo->getDescriptorSet(),0,nullptr);
-                        }
+                    }
                 }
-                vkCmdBindIndexBuffer(commandBuffers[frame_id], obj->indexbuffer, 0, VK_INDEX_TYPE_UINT16);
+                vkCmdBindIndexBuffer(commandBuffers[frame_id], iComp->index_buffer[objCurrentPipeline] , 0, VK_INDEX_TYPE_UINT16);
 
-                vkCmdDrawIndexed(commandBuffers[frame_id], obj->indexdata.size(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(commandBuffers[frame_id], iComp->index_data[objCurrentPipeline].size(), 1, 0, 0, 0);
+                objCurrentPipeline++;
+                o++;
+
             }
-            
+            if(objCurrentPipeline < iComp->entityIDs.size() && pipeline->pipeline_id != iComp->pipeline_id[objCurrentPipeline]) o = 0;
 
-            vkCmdEndRenderPass(commandBuffers[frame_id]);
         }
+        vkCmdEndRenderPass(commandBuffers[frame_id]);
 
     if (vkEndCommandBuffer(commandBuffers[frame_id]) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
@@ -1065,16 +1052,16 @@ void VulkanRenderer::customImmediateSubmitTransfer(std::function<void(VkCommandB
         vkResetCommandPool(device, transferPool, 0);
         transferMutex.unlock();
     } else{
-        vkResetFences(device, 1, &singleGraphicsFence);
+        VK_CHECK(vkResetFences(device, 1, &singleGraphicsFence));
         if(vkQueueSubmit(graphicsQueue, 1, &submitInfo, singleGraphicsFence) != VK_SUCCESS ){
             throw std::runtime_error("Couldn't submit command buffer to queue");
         }
-
-        vkWaitForFences(device, 1, &singleGraphicsFence, VK_TRUE, 9999999999); //wait one second
-        vkResetFences(device, 1, &singleGraphicsFence);
+        VK_CHECK(vkQueueWaitIdle(graphicsQueue));
+        //vkWaitForFences(device, 1, &singleGraphicsFence, VK_TRUE, 9999999999); //wait one second
+        //vkResetFences(device, 1, &singleGraphicsFence);
         
         
-        vkResetCommandPool(device, transferPool, 0);   
+        vkResetCommandPool(device, commandPool, 0);   
         graphicsMutex.unlock(); 
     }
 }

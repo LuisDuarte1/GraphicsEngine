@@ -29,6 +29,33 @@
 #include <functional>
 #include <unordered_map>
 
+#ifndef NDEBUG
+//this slows down the program a bit but helps in troubleshooting
+#define VK_CHECK(func) switch(func){\
+    case VK_SUCCESS: break; \
+    case VK_NOT_READY: std::cout << "Vulkan function returned VK_NOT_READ at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_TIMEOUT: std::cout << "Vulkan function returned VK_TIMEOUT at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_EVENT_SET: std::cout << "Vulkan function returned VK_EVENT_SET at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_EVENT_RESET: std::cout << "Vulkan function returned VK_EVENT_RESET at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_INCOMPLETE: std::cout << "Vulkan function returned VK_INCOMPLETE at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_OUT_OF_HOST_MEMORY: std::cout << "Vulkan function returned VK_ERROR_OUT_OF_HOST_MEMORY at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_OUT_OF_DEVICE_MEMORY: std::cout << "Vulkan function returned VK_ERROR_OUT_OF_DEVICE_MEMORY at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_INITIALIZATION_FAILED: std::cout << "Vulkan function returned VK_ERROR_INITIALIZATION_FAILED at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_DEVICE_LOST: std::cout << "Vulkan function returned VK_ERROR_DEVICE_LOST at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_FRAGMENTATION: std::cout << "Vulkan function returned VK_ERROR_FRAGMENTATION at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_FRAGMENTED_POOL: std::cout << "Vulkan function returned VK_ERROR_FRAGMENTED_POOL at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_OUT_OF_POOL_MEMORY: std::cout << "Vulkan function returned VK_ERROR_OUT_OF_POOL_MEMORY at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    case VK_ERROR_TOO_MANY_OBJECTS: std::cout << "Vulkan function returned VK_ERROR_TOO_MANY_OBJECTS at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    default:std::cout << "Vulkan function returned something else not expected at " << __FILE__ << ":" << __LINE__ << "\n"; break;\
+    }
+
+#else
+//no checks at runtime, if needed to be done they have to be explicit
+#define VK_CHECK(func) func;
+
+#endif
+
+#include "renderObjectComponent.h"
 
 #include "../../camera/camera.h"
 #include "../../light/light.h"
@@ -67,13 +94,15 @@ struct QueueFamilyIndices {
 class VulkanRenderer{
     public:
         VulkanRenderer(Window * newWindow);
-        void render();
+        void render(IComponent<RenderObjectComponent> * iComp);
         void InitVulkan();
         void cleanup();
 
         //bool AddObjectToRender(WorldObject *objp);
         inline void SelectCurrentCamera(Camera* newcamera){current_camera.store(newcamera);}
         inline VkDevice GetCurrentDevice(){return device;};
+        inline VkPhysicalDevice GetCurrentPhysicalDevice(){return physicalDevice;};
+
         inline Camera* GetCurrentCamera(){return current_camera.load();};
         std::atomic<double> delta_time;
 
@@ -86,14 +115,13 @@ class VulkanRenderer{
         PipelineDetails * pipelineDetails;
         void getPipelineDeviceParameters();
 
-        bool AddObjectToRender(WorldObject *objp);
 
         
         //this is a simple copy buffer to buffer transfer using the transferpool
         void immediateSubmitTransfer(VkBuffer src, VkBuffer dst, size_t size);
 
         //this is a immediateSubmitTransfer that takes a lambda function as an argument
-        //therefore, we can customize the transfer. This also uses the transferPool and can only do transfer operations
+        //therefore, we can customize the transfer. This also uses the transferPool or graphics if needed
         void customImmediateSubmitTransfer(std::function<void(VkCommandBuffer)> func1, bool graphicsortransfer);
 
         VkImageCreateInfo getImageCreateInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent);
@@ -104,7 +132,9 @@ class VulkanRenderer{
         //bool AddLightToRender(Light *lightp);
         //void GetNearbyLights(std::vector<Light*> * light_array, glm::vec3 current_pos);
 
-        void drawFrame();
+        void drawFrame(IComponent<RenderObjectComponent> * iComp);
+
+        QueueFamilyIndices findQueueFamilies(VkPhysicalDevice d);
 
 
 
@@ -116,8 +146,6 @@ class VulkanRenderer{
 
     
 
-        std::mutex object_list_mutex;
-        std::vector<std::vector<WorldObject*>> object_list;
         void updateUBOs(int frame_id);
 
         bool checkValidationLayerSupport();
@@ -148,7 +176,6 @@ class VulkanRenderer{
         void pickPhysicalDevice();
         VkPhysicalDevice physicalDevice;
         VkDevice device;
-        QueueFamilyIndices findQueueFamilies(VkPhysicalDevice d);
         void createLogicalDevice();
         
         VkQueue graphicsQueue;

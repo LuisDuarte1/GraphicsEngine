@@ -62,13 +62,11 @@ int main()
     
     renderergl->AddPiplineToList(&simple_shaders);
     
-    
+
     std::vector<float> color;
 
     std::vector<float> pos_sphere = ReadObjFile("sphere.obj");
-    WorldObject Mati;
     srand(time(NULL));
-    color = {};
     for(int i = 0; i<(pos_sphere.size()/5) * 3; i++){
         
         float r = float((rand() % 10 + 1)) / 10.0f; 
@@ -78,15 +76,23 @@ int main()
         color.push_back(g);
         color.push_back(b);
     }
-    Mati.LoadObject(pos_sphere, color);
+    if(!tcomp.addComponent<RenderObjectComponent>(0)) abort(); //create new entity
+    IComponent<RenderObjectComponent> * iMatiComp = tcomp.getComponentList<RenderObjectComponent>();
+    size_t iPos = tcomp.getComponent<RenderObjectComponent>(0);
+
+    iMatiComp->vertex_data[iPos] = LoadObject(pos_sphere, color, iMatiComp->index_data[iPos]); 
+    iMatiComp->texture[iPos] = renderergl->getTextureManager()->AddTexture("FotoFixe.png", ALBEDO_TEXTURE);
+    iMatiComp->pipeline_id[iPos] = simple_shaders.pipeline_id;
+    iMatiComp->world_position[iPos] = glm::vec3(1,-1.5,0);
+    /*Mati.LoadObject(pos_sphere, color);
     Mati.ChangeWorldPosition(glm::vec3(1,-1.5,0));
     Mati.setAlbedoTexture(renderergl->getTextureManager()->AddTexture("SphereRamos.png", ALBEDO_TEXTURE));
-
-    
-    Mati.SendToGPU(renderergl->allocator, renderergl);
     Mati.pipeline_id = simple_shaders.pipeline_id;
-
     renderergl->AddObjectToRender(&Mati);
+
+    */
+    
+
 
     
 

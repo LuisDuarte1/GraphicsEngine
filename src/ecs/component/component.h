@@ -2,7 +2,7 @@
 #define COMPONENT_H
 
 #include <vector>
-
+#include <cstdint>
 
 /* The component class holds all the data. if T is a struct, it will most probably contain a few member 
     variables. Even though we have improved cache locality this is probably not the most optimal way to do

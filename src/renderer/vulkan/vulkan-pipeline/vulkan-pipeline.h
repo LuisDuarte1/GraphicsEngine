@@ -16,6 +16,8 @@
 #include "../../../object/object.h"
 #include "../vulkan-shader/vulkan-shader.h"
 
+#include "../../../utils/objreader.h"
+
 
 //there could be verious types that a uniform buffer can have, to make the system as dynamic as 
 //possible, we need to specify the type to make dereferencing possible (because the pointer is a void pointer)

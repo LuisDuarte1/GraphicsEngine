@@ -50,8 +50,13 @@ if(WIN32)
     find_package(OpenGL REQUIRED)
 
     list(APPEND PROJ_LINK_LIBS opengl32)
-endif(WIN32)
+    string(REPLACE "/showIncludes" " " CMAKE_DEPFILE_FLAGS_CXX ${CMAKE_DEPFILE_FLAGS_CXX}) #nasty fix when using msvc bevause the generator enables /showIncludes by default for some wierd reason
 
+endif(WIN32)
+if(LINUX)
+    find_package(X11 REQUIRED)
+    list(APPEND PROJ_LINK_LIBS X11_X11_LIB)
+endif()
 #copy src folder into build for additional pre_processing steps without affection the actual source
 # Add all files/folders under src folder automatically to the project
 file(GLOB_RECURSE PROJ_SRC_CPP src/*.cpp)
@@ -123,7 +128,7 @@ add_custom_target("Additional_Preprocessor_Script" ALL COMMAND ${PREPROCESSOR_SC
 
 
 ### Compile the shaders after building the source
-add_executable(${PROJECT_NAME} ${PROJ_SRC_CPP}  ${PROJ_SRC_H})
+add_executable(${PROJECT_NAME} "${PROJ_SRC_CPP};${PROJ_SRC_H}")
 
 foreach(shader ${PROJ_SHADERS})
     set(SHADER_FILENAME)

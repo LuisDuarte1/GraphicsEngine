@@ -2,6 +2,11 @@
 #include <string>
 #include "objreader.h"
 
+bool Vertex::operator==(Vertex& a){
+    return a.pos == pos && a.uv_coordinates == uv_coordinates && a.color == color;
+}
+
+
 std::vector<float> ReadObjFile(std::string path_to_obj){
 
 
@@ -127,3 +132,51 @@ std::vector<float> ReadObjFile(std::string path_to_obj){
         return error;
     }
 }
+
+ std::vector<Vertex> LoadObject(std::vector<float> vertices,std::vector<float> colors, std::vector<uint16_t>& indexdata){
+    //the vertices data include the UV coordinate data that must be in a different array alltogether
+    //I convert the vector into a array because it's faster to acess the data in this way
+    std::vector<Vertex> verticesdata;
+    indexdata.clear();
+    int size = vertices.size();
+    if(!((size % 5)== 0)){
+        printf("%d is not divisible by 5. Each vertex must take 5 arguments\n", size);
+        abort();
+    }
+    int size_colors = vertices.size();
+
+    if(!((size_colors % 3)== 0)){
+        printf("%d is not divisible by 3. Each color must take 3 arguments\n", size);
+        abort();
+    }
+
+    for(int i = 0; i < (size/5); i++){ //this assumes that the number of vertices is equal to the number of colors
+        Vertex v;
+
+        v.pos.x = vertices.at(i*5);
+        v.pos.y = vertices.at((i*5)+1);
+        v.pos.z = vertices.at((i*5)+2);
+        v.uv_coordinates.x = vertices.at((i*5)+3);
+        v.uv_coordinates.y = vertices.at((i*5)+4);
+
+
+        v.color.x = colors.at(i*3);
+        v.color.y = colors.at((i*3) + 1);
+        v.color.z = colors.at((i*3) + 2);
+
+        bool found = false;
+        for (int i = 0; i < verticesdata.size(); i++){
+            if(verticesdata[i] == v){
+                found = true;
+                indexdata.push_back(static_cast<uint16_t>(i));
+                break;
+            }
+        }
+        if (!found){
+            verticesdata.emplace_back(v);
+            indexdata.push_back(static_cast<uint16_t>(verticesdata.size() - 1));
+            
+        }
+    }
+    return verticesdata;
+ }

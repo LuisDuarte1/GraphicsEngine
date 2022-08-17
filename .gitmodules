@@ -10,3 +10,6 @@
 [submodule "libs/WindowsHModular"]
 	path = libs/WindowsHModular
 	url = https://github.com/Leandros/WindowsHModular
+[submodule "libs/SPIRV-Reflect"]
+	path = libs/SPIRV-Reflect
+	url = https://github.com/KhronosGroup/SPIRV-Reflect.git

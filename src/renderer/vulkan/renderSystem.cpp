@@ -133,21 +133,22 @@ void VulkanRenderSystem::InitializeObject(VmaAllocator allocator, int i, ICompon
     //sort it into the last pipeline_id element
     for(int e=0; e < componentRender.entityIDs.size() && e != i; e++){
         if(componentRender.pipeline_id[i] < componentRender.pipeline_id[e]){
-            moveIntoIndex(componentRender.index_buffer, e-1,i);
+            // Command: Fill RenderObjectComponent; Format: moveIntoIndex(componentRender.{name}, e-1,i);
+            moveIntoIndex(componentRender.degrees_acc, e-1,i);
+            moveIntoIndex(componentRender.index_alloc, e-1,i);
             moveIntoIndex(componentRender.index_data, e-1,i);
             moveIntoIndex(componentRender.initialized, e-1,i);
-            moveIntoIndex(componentRender.pipeline_id, e-1,i);
-            moveIntoIndex(componentRender.rotation_matrix, e-1,i);
+            moveIntoIndex(componentRender.world_position, e-1,i);
             moveIntoIndex(componentRender.scaling_matrix, e-1,i);
+            moveIntoIndex(componentRender.rotation_matrix, e-1,i);
+            moveIntoIndex(componentRender.vertex_data, e-1,i);
+            moveIntoIndex(componentRender.pipeline_id, e-1,i);
             moveIntoIndex(componentRender.texture, e-1,i);
             moveIntoIndex(componentRender.ubo_data, e-1,i);
-            moveIntoIndex(componentRender.vertex_alloc, e-1,i);
             moveIntoIndex(componentRender.vertex_buffer, e-1,i);
-            moveIntoIndex(componentRender.vertex_data, e-1,i);
-            moveIntoIndex(componentRender.world_position, e-1,i);
-            moveIntoIndex(componentRender.degrees_acc, e-1,i);
-            moveIntoIndex(componentRender.entityIDs, e-1,i);
-            moveIntoIndex(componentRender.index_alloc, e-1,i);
+            moveIntoIndex(componentRender.vertex_alloc, e-1,i);
+            moveIntoIndex(componentRender.index_buffer, e-1,i);
+            //End Command
         }
     }
 }

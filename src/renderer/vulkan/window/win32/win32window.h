@@ -9,7 +9,7 @@
 #include "win32basetypes.h"
 #endif
 
-LRESULT CALLBACK winproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK winproc(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam);
 
 class Win32Window; //fw decl
 

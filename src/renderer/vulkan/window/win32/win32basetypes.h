@@ -5,15 +5,13 @@ to the engine  (which is bad, and may cause conflicts with the std and my own fu
 extern "C"{
     #ifndef WIN32_BASE_TYPES_H
     #define WIN32_BASE_TYPES_H
-typedef unsigned __int64 UINT_PTR, *PUINT_PTR;
-typedef __int64 LONG_PTR, *PLONG_PTR;
-typedef UINT_PTR            WPARAM;
-typedef LONG_PTR            LPARAM;
-typedef LONG_PTR            LRESULT;
-typedef int                 INT;
-typedef unsigned int        UINT;
-typedef char CHAR;
-typedef unsigned short      WORD;
+    #include <stdio.h>
+    #include <stdint.h>
+    #ifndef _WINDEF_
+    #define _WINDEF_
+typedef uint64_t            WPARAM;
+typedef int64_t            LPARAM;
+typedef int64_t            LRESULT;
 #define CONST const
 #define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
 DECLARE_HANDLE(HWND);
@@ -22,12 +20,11 @@ DECLARE_HANDLE(HICON);
 DECLARE_HANDLE(HCURSOR);
 DECLARE_HANDLE(HBRUSH);
 DECLARE_HANDLE(HMODULE);
-typedef unsigned __int64 ULONG_PTR, *PULONG_PTR;
-typedef CHAR *NPSTR, *LPSTR, *PSTR;
-typedef CONST CHAR *LPCSTR, *PCSTR;
+typedef char *NPSTR, *LPSTR, *PSTR;
+typedef CONST char *LPCSTR, *PCSTR;
 #define CALLBACK    __stdcall
 #define WINAPI      __stdcall
-typedef LRESULT (CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
+typedef LRESULT (CALLBACK* WNDPROC)(HWND, uint32_t, WPARAM, LPARAM);
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define WINUSERAPI DECLSPEC_IMPORT
 #define WINBASEAPI DECLSPEC_IMPORT
@@ -38,12 +35,11 @@ typedef LRESULT (CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
 #define MAKEINTRESOURCE  MAKEINTRESOURCEA
 #define IDC_ARROW           MAKEINTRESOURCE(32512)
 #define NULL 0
-typedef WORD                ATOM;   //BUGBUG - might want to remove this from minwin
 
 typedef struct tagWNDCLASSEXA {
-    UINT        cbSize;
+    uint32_t        cbSize;
     /* Win 3.x */
-    UINT        style;
+    uint32_t        style;
     WNDPROC     lpfnWndProc;
     int         cbClsExtra;
     int         cbWndExtra;
@@ -57,5 +53,6 @@ typedef struct tagWNDCLASSEXA {
     HICON       hIconSm;
 } WNDCLASSEXA, *PWNDCLASSEXA, *NPWNDCLASSEXA, *LPWNDCLASSEXA;
 typedef WNDCLASSEXA WNDCLASS;
+    #endif
     #endif
 }
